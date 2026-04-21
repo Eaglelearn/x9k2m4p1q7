@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>👑 Creator Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-y: scroll; overflow-x: hidden; }
+        body { font-family: 'Quicksand', sans-serif; background: #1a1a2e; color: white; padding: 20px; width: 100%; max-width: 100%; margin: 0 auto; min-height: 100vh; position: relative; }
+        .container { max-width: 1400px; margin: 0 auto; width: 100%; }
+        h1 { color: #8B4513; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        h2 { color: #8B4513; margin: 20px 0; }
+        h3 { color: #8B4513; margin: 20px 0 10px; }
+        .back-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
+        .search-box { 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            border: none; 
+            width: 200px; 
+            background: #0f3460; 
+            color: white; 
+        }
+        .search-box::placeholder { color: #aaa; }
+        .refresh-btn { background: #4a90d9; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .users-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; width: 100%; }
+        .user-card { background: #16213e; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; cursor: pointer; transition: none; width: 100%; }
+        .user-card:hover { background: #1e2a4a; }
+        .user-card.selected { border: 2px solid #8B4513; background: #1e2a4a; }
+        .user-info h3 { color: #8B4513; display: flex; align-items: center; gap: 10px; margin: 0 0 10px 0; }
+        .creator-badge { background: gold; color: black; padding: 2px 8px; border-radius: 20px; font-size: 12px; }
+        .user-stats { display: flex; gap: 20px; margin-top: 10px; color: #aaa; flex-wrap: wrap; }
+        .actions { display: flex; gap: 10px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-edit { background: #8B4513; color: white; }
+        .btn-delete { background: #ff4b4b; color: white; }
+        .btn-reset { background: #ffa500; color: white; }
+        .btn-success { background: #58cc02; color: white; }
+        .btn-save { background: #8B4513; color: white; padding: 12px 24px; font-size: 16px; }
+        .lesson-panel { background: #16213e; padding: 20px; border-radius: 15px; margin-top: 20px; width: 100%; }
+        .units-container { display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto; padding-right: 10px; width: 100%; }
+        .unit-section { background: #0f3460; border-radius: 12px; padding: 15px; width: 100%; }
+        .unit-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; color: #8B4513; font-weight: 700; font-size: 18px; cursor: pointer; }
+        .unit-header:hover { opacity: 0.8; }
+        .lessons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-left: 20px; }
+        .lesson-checkbox { display: flex; align-items: center; gap: 8px; padding: 8px; background: #1a1a2e; border-radius: 8px; cursor: pointer; }
+        .lesson-checkbox input { width: 20px; height: 20px; cursor: pointer; accent-color: #8B4513; }
+        .lesson-checkbox.completed { background: #1e3a1e; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: #16213e; padding: 30px; border-radius: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-content h2 { margin-bottom: 20px; color: #8B4513; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #aaa; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #0f3460; color: white; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .close-btn { background: #333; color: white; }
+        .loading { text-align: center; padding: 40px; color: #aaa; }
+        .selected-user-bar { background: #8B4513; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px; }
+        .collapse-icon { font-size: 20px; transition: transform 0.2s; }
+        .unit-section.collapsed .lessons-grid { display: none; }
+        .unit-section.collapsed .collapse-icon { transform: rotate(-90deg); }
+        .subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .subject-tab { padding: 10px 20px; background: #0f3460; border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600; }
+        .subject-tab.active { background: #8B4513; }
+        .heart-value { font-weight: bold; }
+        .heart-full { color: #ff4b4b; }
+        .heart-empty { color: #666; }
+        @media (min-width: 900px) { .container { max-width: 1000px; } .users-grid { display: grid; grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1300px) { .container { max-width: 1200px; } .users-grid { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <button class="back-btn" onclick="window.location.href='/home'">← Back to Home</button>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search users...">
+                <button class="refresh-btn" onclick="loadUsers()">🔄 Refresh Users</button>
+            </div>
+        </div>
+        <h1>👑 Creator Super Admin Panel</h1>
+        
+        <h2>📋 All Users (Click to select)</h2>
+        <div id="usersContainer" class="users-grid"><div class="loading">Loading users...</div></div>
+        
+        <div id="selectedUserPanel" style="display: none;">
+            <div class="selected-user-bar">
+                <span>📝 Editing: <strong id="selectedUsername"></strong></span>
+                <button class="btn btn-success" onclick="saveAllChanges()">💾 Save All Changes</button>
+            </div>
+            
+            <div class="subject-tabs">
+                <button class="subject-tab active" onclick="switchSubject('Language')">🌍 Language</button>
+                <button class="subject-tab" onclick="switchSubject('Math')">🔢 Math (Mongolian)</button>
+            </div>
+            
+            <div class="lesson-panel">
+                <h3 style="margin-bottom: 15px;">📚 <span id="currentSubjectTitle">Language</span> Units & Lessons</h3>
+                <div id="unitsContainer2" class="units-container"><div class="loading">Select a user to edit lessons...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>✏️ Edit User Stats</h2>
+            <input type="hidden" id="editUsername">
+            <div class="input-group">
+                <label>❤️ Hearts (0-999)</label>
+                <input type="number" id="editHearts" min="0" max="999">
+                <small style="color: #aaa;">Note: Hearts will NOT auto-refill after admin edit</small>
+            </div>
+            <div class="input-group"><label>⭐ Total XP</label><input type="number" id="editXP" min="0"></div>
+            <div class="input-group"><label>🔥 Streak Days</label><input type="number" id="editStreak" min="0"></div>
+            <div class="input-group"><label>🎁 Chests Earned</label><input type="number" id="editChests" min="0"></div>
+            <div class="input-group"><label>🌍 Learning Language</label><select id="editLanguage"><option value="English">English</option><option value="Spanish">Spanish</option><option value="French">French</option></select></div>
+            <div class="input-group"><label>📚 Subject</label><select id="editSubject"><option value="Language">Language</option><option value="Math">Math</option></select></div>
+            <div class="modal-actions">
+                <button class="btn btn-edit" onclick="saveUserEdit()">💾 Save Changes</button>
+                <button class="btn close-btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedUser = null, currentUserProgress = {}, currentViewSubject = 'Language', allLanguageUnits = [], allMathUnits = [], originalProgress = {};
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users'); 
+                if (!res.ok) { 
+                    if (res.status === 403) {
+                        alert('Access denied. Creator only!');
+                        window.location.href = '/home';
+                    }
+                    return; 
+                }
+                const data = await res.json();
+                const container = document.getElementById('usersContainer'); 
+                container.innerHTML = '';
+                if (!data.users || data.users.length === 0) { 
+                    container.innerHTML = '<div class="loading">No users found.</div>'; 
+                    return; 
+                }
+                data.users.forEach(user => {
+                    const card = document.createElement('div'); 
+                    card.className = `user-card ${selectedUser === user.username ? 'selected' : ''}`;
+                    const heartDisplay = user.hearts === 999 ? '∞' : user.hearts;
+                    const heartColor = user.hearts > 0 ? '❤️' : '🖤';
+                    card.innerHTML = `<div class="user-info"><h3>${user.username} ${user.is_creator ? '<span class="creator-badge">👑 CREATOR</span>' : ''}</h3><div class="user-stats"><span>${heartColor} ${heartDisplay}</span><span>⭐ ${user.total_xp || 0} XP</span><span>🔥 ${user.streak || 0} days</span><span>📚 ${user.lessons_completed || 0} lessons</span></div></div><div class="actions"><button class="btn btn-edit" onclick="event.stopPropagation(); editUser('${user.username}')">✏️ Edit Stats</button><button class="btn btn-reset" onclick="event.stopPropagation(); resetProgress('${user.username}')">🔄 Reset All</button>${!user.is_creator ? `<button class="btn btn-delete" onclick="event.stopPropagation(); deleteUser('${user.username}')">🗑️ Delete</button>` : ''}</div>`;
+                    card.onclick = () => selectUser(user.username); 
+                    container.appendChild(card);
+                });
+            } catch (err) { 
+                document.getElementById('usersContainer').innerHTML = '<div class="loading">Error loading users.</div>'; 
+                console.error(err);
+            }
+        }
+
+        async function selectUser(username) {
+            selectedUser = username; 
+            document.getElementById('selectedUsername').textContent = username; 
+            document.getElementById('selectedUserPanel').style.display = 'block';
+            
+            // Highlight selected user in list
+            document.querySelectorAll('.user-card').forEach(card => { 
+                card.classList.remove('selected'); 
+                if (card.querySelector('h3').textContent.includes(username)) card.classList.add('selected'); 
+            });
+            
+            try {
+                const res = await fetch(`/api/admin/user/${username}/full`); 
+                const data = await res.json(); 
+                currentUserProgress = data.progress || {}; 
+                originalProgress = JSON.parse(JSON.stringify(currentUserProgress));
+                
+                const langRes = await fetch('/api/units?subject=Language'); 
+                const langData = await langRes.json(); 
+                allLanguageUnits = langData.units || [];
+                
+                const mathRes = await fetch('/api/units?subject=Math'); 
+                const mathData = await mathRes.json(); 
+                allMathUnits = mathData.units || [];
+                
+                renderUnits();
+            } catch (err) {
+                console.error('Error selecting user:', err);
+            }
+        }
+
+        function switchSubject(subject) {
+            currentViewSubject = subject; 
+            document.querySelectorAll('.subject-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active'); 
+            document.getElementById('currentSubjectTitle').textContent = subject; 
+            renderUnits();
+        }
+
+        function renderUnits() {
+            const container = document.getElementById('unitsContainer2'); 
+            container.innerHTML = '';
+            const units = currentViewSubject === 'Language' ? allLanguageUnits : allMathUnits;
+            const unitIds = [...new Set(units.map(u => u.id))].sort((a,b) => a-b);
+            
+            unitIds.forEach(unitId => {
+                const unit = units.find(u => u.id === unitId); 
+                if (!unit) return;
+                
+                const unitDiv = document.createElement('div'); 
+                unitDiv.className = 'unit-section';
+                const completedLessons = Array.from({length: unit.total}, (_, i) => i + 1).filter(lessonId => currentUserProgress[`${currentViewSubject}:${unitId}:${lessonId}`]?.completed || false).length;
+                
+                unitDiv.innerHTML = `<div class="unit-header" onclick="toggleUnit(this)"><span class="collapse-icon">▼</span><span>Unit ${unitId}: ${unit.name}</span><span class="progress-counter" style="margin-left: auto; font-size: 14px; color: #aaa;">${completedLessons}/${unit.total}</span></div><div class="lessons-grid" id="unit-${currentViewSubject}-${unitId}-lessons"></div>`;
+                container.appendChild(unitDiv);
+                
+                const lessonsGrid = document.getElementById(`unit-${currentViewSubject}-${unitId}-lessons`);
+                for (let lessonId = 1; lessonId <= unit.total; lessonId++) {
+                    const key = `${currentViewSubject}:${unitId}:${lessonId}`;
+                    const isCompleted = currentUserProgress[key]?.completed || false;
+                    const score = currentUserProgress[key]?.score || 0;
+                    const lessonDiv = document.createElement('div'); 
+                    lessonDiv.className = `lesson-checkbox ${isCompleted ? 'completed' : ''}`;
+                    lessonDiv.innerHTML = `<input type="checkbox" id="lesson-${currentViewSubject}-${unitId}-${lessonId}" ${isCompleted ? 'checked' : ''} onchange="toggleLesson('${currentViewSubject}', ${unitId}, ${lessonId}, this.checked)"><label for="lesson-${currentViewSubject}-${unitId}-${lessonId}">Lesson ${lessonId}</label>${isCompleted ? `<span style="margin-left: auto; font-size: 12px;">${score}/5</span>` : ''}`;
+                    lessonsGrid.appendChild(lessonDiv);
+                }
+            });
+        }
+
+        function toggleUnit(header) { 
+            header.closest('.unit-section').classList.toggle('collapsed'); 
+        }
+        
+        function toggleLesson(subject, unitId, lessonId, completed) {
+            const key = `${subject}:${unitId}:${lessonId}`;
+            if (completed) {
+                currentUserProgress[key] = { completed: true, score: 5 }; 
+            } else { 
+                delete currentUserProgress[key]; 
+            }
+            
+            // Update checkbox styling
+            const checkboxDiv = document.getElementById(`lesson-${subject}-${unitId}-${lessonId}`).closest('.lesson-checkbox');
+            if (checkboxDiv) checkboxDiv.classList.toggle('completed', completed);
+            
+            // Update progress counter
+            const unitSection = checkboxDiv.closest('.unit-section');
+            const progressSpan = unitSection.querySelector('.progress-counter');
+            if (progressSpan) {
+                const units = subject === 'Language' ? allLanguageUnits : allMathUnits;
+                const unit = units.find(u => u.id === unitId);
+                if (unit) {
+                    const completedCount = Array.from({length: unit.total}, (_, i) => i + 1)
+                        .filter(lid => currentUserProgress[`${subject}:${unitId}:${lid}`]?.completed || false).length;
+                    progressSpan.textContent = `${completedCount}/${unit.total}`;
+                }
+            }
+        }
+
+        async function saveAllChanges() {
+            if (!selectedUser) return;
+            if (!confirm(`Save all progress changes for ${selectedUser}?`)) return;
+            
+            try {
+                const res = await fetch(`/api/admin/user/${selectedUser}/update-progress`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ progress: currentUserProgress })
+                });
+                const data = await res.json(); 
+                if (data.success) { 
+                    alert('✅ All changes saved!'); 
+                    originalProgress = JSON.parse(JSON.stringify(currentUserProgress)); 
+                    loadUsers(); 
+                } else { 
+                    alert('❌ Error saving changes!'); 
+                }
+            } catch (err) {
+                alert('❌ Connection error!');
+            }
+        }
+
+        async function editUser(username) {
+            try {
+                const res = await fetch(`/api/admin/user/${username}`); 
+                const user = await res.json();
+                document.getElementById('editUsername').value = username; 
+                document.getElementById('editHearts').value = user.hearts || 5;
+                document.getElementById('editXP').value = user.total_xp || 0; 
+                document.getElementById('editStreak').value = user.streak || 0;
+                document.getElementById('editChests').value = user.chests_earned || 0; 
+                document.getElementById('editLanguage').value = user.learning_language || 'English';
+                document.getElementById('editSubject').value = user.learning_subject || 'Language'; 
+                document.getElementById('editModal').classList.add('show');
+            } catch (err) {
+                alert('Error loading user data');
+            }
+        }
+
+        async function saveUserEdit() {
+            const username = document.getElementById('editUsername').value;
+            const newHearts = parseInt(document.getElementById('editHearts').value) || 5;
+            
+            const data = { 
+                hearts: newHearts, 
+                total_xp: parseInt(document.getElementById('editXP').value) || 0, 
+                streak: parseInt(document.getElementById('editStreak').value) || 0, 
+                chests_earned: parseInt(document.getElementById('editChests').value) || 0, 
+                learning_language: document.getElementById('editLanguage').value, 
+                learning_subject: document.getElementById('editSubject').value 
+            };
+            
+            try {
+                await fetch(`/api/admin/user/${username}/update`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data)
+                });
+                closeModal(); 
+                loadUsers(); 
+                if (selectedUser === username) selectUser(username); 
+                alert(`✅ Updated ${username}! Hearts set to ${newHearts}`);
+            } catch (err) {
+                alert('Error saving user data');
+            }
+        }
+
+        async function resetProgress(username) { 
+            if (!confirm(`⚠️ Reset ALL progress for ${username}? This cannot be undone!`)) return; 
+            await fetch(`/api/admin/user/${username}/reset-progress`, {method: 'POST'}); 
+            loadUsers(); 
+            if (selectedUser === username) selectUser(username); 
+            alert(`🔄 Reset ${username}!`); 
+        }
+        
+        async function deleteUser(username) { 
+            if (!confirm(`⚠️ PERMANENTLY DELETE ${username}? This cannot be undone!`)) return; 
+            await fetch(`/api/admin/user/${username}/delete`, {method: 'POST'}); 
+            loadUsers(); 
+            if (selectedUser === username) { 
+                selectedUser = null; 
+                document.getElementById('selectedUserPanel').style.display = 'none'; 
+            } 
+            alert(`🗑️ Deleted ${username}!`); 
+        }
+        
+        function closeModal() { 
+            document.getElementById('editModal').classList.remove('show'); 
+        }
+        
+// Search filter function
+function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.user-card');
+    cards.forEach(card => {
+        const username = card.querySelector('h3').textContent.toLowerCase();
+        if (username.includes(searchTerm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Add event listener for search
+document.getElementById('searchInput').addEventListener('keyup', filterUsers);
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', (e) => { 
+            if (e.target.classList.contains('modal')) closeModal(); 
+        });
+        
+        // Initial load
+        loadUsers();
+    </script>
+</body>
+</html>

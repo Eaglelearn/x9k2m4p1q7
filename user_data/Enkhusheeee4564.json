@@ -1,0 +1,74 @@
+{
+  "username": "Enkhusheeee4564",
+  "password": "80b9f18fb8d0e339e0098130828cea5e6e59bda49ba4393a4312118417727214",
+  "learning_language": "English",
+  "learning_subject": "Language",
+  "streak": 1,
+  "last_active": "2026-04-18",
+  "total_xp": 625,
+  "hearts": 5,
+  "last_heart_refill": "2026-04-18 19:12:09",
+  "boost_multiplier": 1,
+  "boost_expires": null,
+  "chests_earned": 4,
+  "created_at": "2026-04-10 22:30:00",
+  "progress": {
+    "Language:3:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:2": {
+      "completed": true,
+      "score": 3
+    },
+    "Language:3:3": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:5": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:2": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:3": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:4": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:4:5": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:5:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:5:2": {
+      "completed": true,
+      "score": 5
+    }
+  },
+  "chests_claimed": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "is_creator": false,
+  "vocabulary_learned": [],
+  "math_ui_language": "English"
+}

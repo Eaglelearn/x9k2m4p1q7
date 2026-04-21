@@ -1,0 +1,85 @@
+{
+  "username": "CREATOR",
+  "password": "ea28bf3b826389634f66939897008244c4210d5bb95f3ef30a995a365c35809d",
+  "learning_language": "Mongolian",
+  "learning_subject": "Language",
+  "streak": 1,
+  "last_active": "2026-04-21",
+  "total_xp": 325,
+  "hearts": 5,
+  "last_heart_refill": "2026-04-21 16:27:34",
+  "boost_multiplier": 1,
+  "boost_expires": null,
+  "chests_earned": 3,
+  "created_at": "2026-04-09 22:39:32",
+  "progress": {
+    "Language:1:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:1:2": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:2:1": {
+      "completed": true,
+      "score": 2
+    },
+    "Language:1:3": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:24:1": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:27:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:37:1": {
+      "completed": true,
+      "score": 2
+    },
+    "Language:37:3": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:37:4": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:37:5": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:20:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:1:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:38:2": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:3": {
+      "completed": true,
+      "score": 5
+    }
+  },
+  "chests_claimed": [
+    1,
+    37,
+    3
+  ],
+  "is_creator": true,
+  "vocabulary_learned": [],
+  "math_ui_language": "English"
+}

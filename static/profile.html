@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>EagleLearn • Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-y: scroll; overflow-x: hidden; }
+        body { font-family: 'Quicksand', sans-serif; background: #f5f7fa; width: 100%; max-width: 100%; margin: 0 auto; min-height: 100vh; position: relative; }
+        .app-header { background: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; width: 100%; max-width: 800px; margin: 0 auto; }
+        .back-btn { background: none; border: none; font-size: 20px; cursor: pointer; text-decoration: none; color: #333; }
+        .logout-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
+        .profile-content { padding: 20px; padding-bottom: 80px; width: 100%; max-width: 800px; margin: 0 auto; }
+        .profile-header { text-align: center; padding: 20px; background: white; border-radius: 24px; margin-bottom: 20px; }
+        .avatar-large { width: 100px; height: 100px; background: linear-gradient(135deg, #8B4513, #A0522D); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 56px; margin: 0 auto 16px; }
+        .username { font-size: 28px; font-weight: 700; color: #333; }
+        .creator-badge { background: gold; color: black; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-block; margin-top: 8px; }
+        .member-since { color: #888; font-size: 14px; margin-top: 4px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 20px; text-align: center; }
+        .stat-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #333; }
+        .stat-label { font-size: 13px; color: #888; }
+        .subject-section { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #333; }
+        .selector-btn { width: 100%; padding: 16px; background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
+        .selector-btn:hover { background: #f5e6d3; border-color: #8B4513; }
+        .refill-btn { width: 100%; padding: 16px; background: #8B4513; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .refill-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #ccc; }
+        .admin-btn { width: 100%; padding: 16px; background: gold; color: black; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; max-width: 800px; margin: 0 auto; background: white; display: flex; justify-content: space-around; padding: 12px 20px; border-top: 1px solid #eee; z-index: 100; }
+        .nav-item { color: #999; text-decoration: none; font-weight: 600; padding: 8px 16px; border-radius: 20px; }
+        .nav-item.active { background: #f5e6d3; color: #8B4513; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 90%; }
+        .option-item { padding: 16px; background: #f8f9fa; border-radius: 16px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .option-item:hover { background: #f5e6d3; }
+        .option-item.selected { background: #8B4513; color: white; }
+        .close-btn { width: 100%; padding: 14px; background: #f0f0f0; border: none; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; }
+        .xp-info { text-align: center; margin-top: 8px; color: #8B4513; font-weight: 600; }
+        @media (min-width: 900px) { .app-header, .profile-content, .bottom-nav { max-width: 1000px; } .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1300px) { .app-header, .profile-content, .bottom-nav { max-width: 1200px; } }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <a href="/home" class="back-btn">← Home</a>
+        <h2>Profile 🦅</h2>
+        <button class="logout-btn" onclick="logout()">🚪</button>
+    </header>
+
+    <main class="profile-content">
+        <div class="profile-header">
+            <div class="avatar-large">🦅</div>
+            <div class="username" id="profileUsername">Loading...</div>
+            <div id="creatorBadgeContainer"></div>
+            <div class="member-since" id="memberSince"></div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-icon">🔥</span><span class="stat-value" id="profileStreak">0</span><span class="stat-label">Day Streak</span></div>
+            <div class="stat-card"><span class="stat-icon">⭐</span><span class="stat-value" id="profileXP">0</span><span class="stat-label">Total XP</span></div>
+            <div class="stat-card"><span class="stat-icon">❤️</span><span class="stat-value" id="profileHearts">5</span><span class="stat-label">Hearts</span></div>
+            <div class="stat-card"><span class="stat-icon">📚</span><span class="stat-value" id="profileLessons">0</span><span class="stat-label">Lessons</span></div>
+            <div class="stat-card"><span class="stat-icon">🎁</span><span class="stat-value" id="profileChests">0</span><span class="stat-label">Chests</span></div>
+            <div class="stat-card"><span class="stat-icon" id="subjectIcon">🌍</span><span class="stat-value" id="profileSubject">Language</span><span class="stat-label">Subject</span></div>
+        </div>
+        <div class="subject-section">
+            <h3 class="section-title">Settings</h3>
+            <div class="selector-btn" onclick="showSubjectModal()"><span>📚 Subject: <span id="currentSubject">Language</span></span><span>▼</span></div>
+            <div class="selector-btn" id="languageSelector" onclick="showLanguageModal()"><span>🌐 Language: <span id="currentLanguage">English</span></span><span>▼</span></div>
+            <button class="refill-btn" id="refillBtn" onclick="refillHearts()">❤️ Refill Hearts (500 XP)</button>
+            <p class="xp-info" id="xpInfo"></p>
+            <button class="admin-btn" id="adminBtn" onclick="goToAdmin()" style="display: none;">👑 Admin Panel</button>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item">🏠 Home</a>
+        <a href="/profile" class="nav-item active">👤 Profile</a>
+    </nav>
+
+    <div id="subjectModal" class="modal"><div class="modal-content"><h3>Choose Subject</h3><div id="subjectList"></div><button class="close-btn" onclick="hideSubjectModal()">Cancel</button></div></div>
+    <div id="languageModal" class="modal"><div class="modal-content"><h3>Choose Language</h3><div id="languageList"></div><button class="close-btn" onclick="hideLanguageModal()">Cancel</button></div></div>
+
+    <script>
+        let currentSubject = 'Language', currentLanguage = 'English', userXP = 0, isCreator = false;
+        const flagMap = {'English': '🇬🇧', 'Spanish': '🇪🇸', 'French': '🇫🇷'}, subjectIconMap = {'Language': '🌍', 'Math': '🔢'};
+
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/profile-stats'); const data = await res.json();
+                if (data.error) { window.location.href = '/'; return; }
+                document.getElementById('profileUsername').textContent = data.username || 'User';
+                document.getElementById('profileStreak').textContent = data.streak || 0;
+                document.getElementById('profileXP').textContent = data.total_xp || 0;
+                document.getElementById('profileHearts').textContent = data.hearts || 5;
+                document.getElementById('profileLessons').textContent = data.lessons_completed || 0;
+                document.getElementById('profileChests').textContent = data.chests_earned || 0;
+                document.getElementById('memberSince').textContent = `Member since ${data.member_since || 'Today'}`;
+                currentSubject = data.subject || 'Language'; currentLanguage = data.learning_language || 'English';
+                userXP = data.total_xp || 0; isCreator = data.is_creator || false;
+                document.getElementById('currentSubject').textContent = currentSubject;
+                document.getElementById('currentLanguage').textContent = currentLanguage;
+                document.getElementById('profileSubject').textContent = currentSubject;
+                document.getElementById('subjectIcon').textContent = subjectIconMap[currentSubject] || '🌍';
+                if (isCreator) { document.getElementById('creatorBadgeContainer').innerHTML = '<span class="creator-badge">👑 CREATOR</span>'; document.getElementById('adminBtn').style.display = 'block'; }
+                document.getElementById('languageSelector').style.display = currentSubject === 'Math' ? 'none' : 'block';
+                const refillBtn = document.getElementById('refillBtn'), xpInfo = document.getElementById('xpInfo');
+                if (isCreator) { refillBtn.disabled = false; refillBtn.textContent = '👑 Refill Hearts (FREE)'; xpInfo.textContent = 'Creator mode: Unlimited refills!'; }
+                else if (data.hearts >= 5) { refillBtn.disabled = true; refillBtn.textContent = '❤️ Hearts Full!'; xpInfo.textContent = ''; }
+                else if (userXP < 500) { refillBtn.disabled = true; refillBtn.textContent = `❌ Need 500 XP (${userXP}/500)`; xpInfo.textContent = `Earn ${500 - userXP} more XP to refill!`; }
+                else { refillBtn.disabled = false; refillBtn.textContent = '❤️ Refill Hearts (500 XP)'; xpInfo.textContent = `You have ${userXP} XP - can refill!`; }
+            } catch (err) { console.error('Error loading profile:', err); }
+        }
+
+        async function showSubjectModal() {
+            const modal = document.getElementById('subjectModal'), list = document.getElementById('subjectList');
+            const res = await fetch('/api/subjects'); const data = await res.json();
+            list.innerHTML = '';
+            data.subjects.forEach(subject => {
+                const div = document.createElement('div'); div.className = 'option-item';
+                if (subject.id === currentSubject) div.classList.add('selected');
+                div.innerHTML = `<span style="font-size: 24px;">${subject.icon}</span><span style="font-weight: 600;">${subject.name}</span>`;
+                div.onclick = async () => { await fetch('/api/set-subject', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject: subject.id, language: currentLanguage})}); hideSubjectModal(); window.location.href = '/home'; };
+                list.appendChild(div);
+            });
+            modal.classList.add('show');
+        }
+
+        async function showLanguageModal() {
+            const modal = document.getElementById('languageModal'), list = document.getElementById('languageList');
+            const res = await fetch('/api/languages'); const data = await res.json();
+            list.innerHTML = '';
+            data.languages.forEach(lang => {
+                const div = document.createElement('div'); div.className = 'option-item';
+                if (lang.code === currentLanguage) div.classList.add('selected');
+                div.innerHTML = `<span style="font-size: 24px;">${lang.flag}</span><span style="font-weight: 600;">${lang.name}</span>`;
+                div.onclick = async () => { await fetch('/api/set-subject', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject: 'Language', language: lang.code})}); hideLanguageModal(); window.location.href = '/home'; };
+                list.appendChild(div);
+            });
+            modal.classList.add('show');
+        }
+
+        function hideSubjectModal() { document.getElementById('subjectModal').classList.remove('show'); }
+        function hideLanguageModal() { document.getElementById('languageModal').classList.remove('show'); }
+        async function refillHearts() { const res = await fetch('/api/refill-hearts', {method: 'POST'}); const data = await res.json(); alert(data.message || (data.success ? 'Hearts refilled!' : 'Failed to refill')); if (data.success) loadProfile(); }
+        function goToAdmin() { window.location.href = '/admin'; }
+        async function logout() { await fetch('/api/logout', {method: 'POST'}); window.location.href = '/'; }
+        document.getElementById('subjectModal').addEventListener('click', (e) => { if (e.target.classList.contains('modal')) hideSubjectModal(); });
+        document.getElementById('languageModal').addEventListener('click', (e) => { if (e.target.classList.contains('modal')) hideLanguageModal(); });
+        loadProfile();
+    </script>
+</body>
+</html>

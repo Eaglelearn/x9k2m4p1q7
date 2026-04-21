@@ -1,0 +1,21 @@
+{
+  "username": "TEST2",
+  "password": "da84e02c6f8a61a5ade8519dd7135a68cd3211c9799ec5791517a8c13a828929",
+  "learning_language": "English",
+  "learning_subject": "Language",
+  "math_ui_language": "English",
+  "role": "teacher",
+  "streak": 1,
+  "last_active": "2026-04-21",
+  "total_xp": 0,
+  "hearts": 5,
+  "last_heart_refill": "2026-04-21 16:03:30",
+  "boost_multiplier": 1,
+  "boost_expires": null,
+  "chests_earned": 0,
+  "created_at": "2026-04-21 15:51:43",
+  "progress": {},
+  "chests_claimed": [],
+  "is_creator": false,
+  "vocabulary_learned": []
+}

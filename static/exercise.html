@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Exercise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-y: scroll; overflow-x: hidden; }
+        body { font-family: 'Quicksand', sans-serif; background: #f5f7fa; width: 100%; max-width: 100%; margin: 0 auto; min-height: 100vh; position: relative; }
+        .app-header { background: white; padding: 16px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #eee; width: 100%; max-width: 800px; margin: 0 auto; }
+        .back-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #333; }
+        .progress-bar-container { flex: 1; height: 8px; background: #e5e5e5; border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #8B4513; width: 0%; transition: width 0.3s; }
+        .hearts-display { display: flex; gap: 4px; }
+        .heart { color: #ff4b4b; font-size: 20px; }
+        .heart.empty { color: #ddd; }
+        .exercise-container { padding: 24px 20px; width: 100%; max-width: 800px; margin: 0 auto; }
+        .question-card { background: white; border-radius: 24px; padding: 32px 24px; width: 100%; }
+        .question-header { display: flex; justify-content: space-between; margin-bottom: 32px; }
+        .speaker-btn { background: #f0f0f0; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 24px; cursor: pointer; }
+        .speaker-btn.speaking { background: #8B4513; color: white; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .question-word { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 40px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .option-btn { padding: 18px; background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 16px; font-size: 16px; font-weight: 500; cursor: pointer; }
+        .option-btn.correct { background: #8B4513; color: white; border-color: #6B3410; }
+        .option-btn.wrong { background: #ff4b4b; color: white; border-color: #cc0000; }
+        .option-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .listening-input { width: 100%; padding: 16px; font-size: 16px; border-radius: 16px; border: 2px solid #e9ecef; margin-bottom: 16px; }
+        .submit-btn { grid-column: span 2; background: #8B4513; color: white; }
+        .feedback { text-align: center; padding: 16px; font-size: 18px; font-weight: 600; min-height: 60px; }
+        .next-btn { width: 100%; padding: 16px; background: #8B4513; color: white; border: none; border-radius: 16px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 0 #6B3410; margin-top: 16px; }
+        .next-btn:active { transform: translateY(4px); box-shadow: none; }
+        .next-btn.hidden { display: none; }
+        .hint-text { text-align: center; color: #aaa; font-size: 12px; margin-top: 8px; }
+        .leave-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .leave-modal.show { display: flex; }
+        .leave-content { background: white; border-radius: 32px; padding: 32px; max-width: 320px; width: 90%; text-align: center; }
+        .crying-eagle { font-size: 80px; animation: cry 1s infinite; }
+        @keyframes cry { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        .leave-content h3 { font-size: 24px; margin: 16px 0 8px; color: #333; }
+        .leave-content p { color: #888; margin-bottom: 24px; }
+        .leave-buttons { display: flex; gap: 12px; }
+        .stay-btn { flex: 1; padding: 14px; background: #8B4513; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .leave-btn { flex: 1; padding: 14px; background: #f0f0f0; color: #666; border: none; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        @media (min-width: 900px) { .app-header, .exercise-container { max-width: 1000px; } .options-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1300px) { .app-header, .exercise-container { max-width: 1200px; } }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <button class="back-btn" onclick="showLeaveModal()">←</button>
+        <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="hearts-display" id="heartsDisplay"></div>
+    </header>
+
+    <main class="exercise-container">
+        <div id="loadingMessage" style="text-align:center;padding:60px;color:#888;">Loading...</div>
+        <div id="exerciseContent" style="display: none;">
+            <div class="question-card">
+                <div class="question-header">
+                    <span id="questionCounter">1/5</span>
+                    <button class="speaker-btn" id="speakerBtn" style="display: none;">🔊</button>
+                </div>
+                <h2 id="questionWord" class="question-word"></h2>
+                <div id="optionsContainer" class="options-grid"></div>
+                <div id="feedbackMessage" class="feedback"></div>
+                <button id="nextBtn" class="next-btn hidden">Next →</button>
+                <p class="hint-text">Press Enter for next • 1-4 to select</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="leave-modal" id="leaveModal">
+        <div class="leave-content">
+            <div class="crying-eagle">🦅😢</div>
+            <h3>Please don't leave!</h3>
+            <p>You're soaring high! Keep going!</p>
+            <div class="leave-buttons">
+                <button class="stay-btn" onclick="hideLeaveModal()">Stay</button>
+                <button class="leave-btn" onclick="forceLeave()">Leave</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const unitId = urlParams.get('unit');
+        const lessonId = urlParams.get('lesson');
+        let questions = [], currentIndex = 0, score = 0, mistakes = 0, answered = false, canProceed = false, currentHearts = 5;
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playCorrectSound() {
+            try { const o=audioContext.createOscillator(), g=audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value=800; o.type='sine'; g.gain.setValueAtTime(0.1,audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioContext.currentTime+0.2); o.start(); o.stop(audioContext.currentTime+0.2); } catch(e) {}
+        }
+        function playWrongSound() {
+            try { const o=audioContext.createOscillator(), g=audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value=300; o.type='sawtooth'; g.gain.setValueAtTime(0.1,audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioContext.currentTime+0.3); o.start(); o.stop(audioContext.currentTime+0.3); } catch(e) {}
+        }
+
+        function updateHearts() {
+            const d=document.getElementById('heartsDisplay'); d.innerHTML='';
+            for(let i=0;i<5;i++){ const h=document.createElement('span'); h.className=i<currentHearts?'heart':'heart empty'; h.textContent=i<currentHearts?'❤️':'🖤'; d.appendChild(h); }
+        }
+
+        async function loadQuestions() {
+            const res=await fetch(`/api/lesson/${unitId}/${lessonId}`); const data=await res.json();
+            if(data.error){ alert(data.error); window.location.href=`/unit/${unitId}`; return; }
+            questions=data.questions; currentHearts=data.hearts; updateHearts();
+            document.getElementById('loadingMessage').style.display='none';
+            document.getElementById('exerciseContent').style.display='block';
+            showQuestion(0);
+        }
+
+        function showQuestion(i){
+            answered=false; canProceed=false; const q=questions[i];
+            document.getElementById('questionCounter').textContent=`${i+1}/${questions.length}`;
+            document.getElementById('progressBar').style.width=`${(i/questions.length)*100}%`;
+            document.getElementById('questionWord').textContent=q.q;
+            const container=document.getElementById('optionsContainer'); container.innerHTML='';
+            document.getElementById('speakerBtn').style.display='none';
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('feedbackMessage').textContent='';
+
+            if(q.type==='listening'){
+                document.getElementById('speakerBtn').style.display='block';
+                document.getElementById('speakerBtn').onclick=()=>{ const u=new SpeechSynthesisUtterance(q.audio); u.lang='en-US'; speechSynthesis.speak(u); };
+                const input=document.createElement('input'); input.type='text'; input.className='listening-input'; input.placeholder='Type what you hear...'; input.id='listeningInput'; container.appendChild(input);
+                const submit=document.createElement('button'); submit.className='option-btn submit-btn'; submit.textContent='Submit';
+                submit.onclick=()=>{ checkAnswer(document.getElementById('listeningInput').value.trim(), q.ans, true); };
+                container.appendChild(submit);
+                input.addEventListener('keypress',(e)=>{ if(e.key==='Enter') submit.click(); });
+            } else {
+                const opts=q.opts||[];
+                opts.forEach(opt=>{ const btn=document.createElement('button'); btn.className='option-btn'; btn.textContent=opt; btn.onclick=()=>checkAnswer(opt, q.ans, false); container.appendChild(btn); });
+            }
+        }
+
+        function normalize(str, removeSpaces=false){
+            let result=str.toLowerCase().trim().replace(/stomachache/g,'stomach ache').replace(/headache/g,'head ache').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?'"]/g,'').replace(/[^a-z0-9 ]/g,'');
+            if(removeSpaces) result=result.replace(/\s+/g,''); else result=result.replace(/\s+/g,' ');
+            return result;
+        }
+
+        function checkAnswer(selected, correct, isListening=false){
+            if(answered) return; answered=true; canProceed=true;
+            const nSelected=normalize(selected, isListening), nCorrect=normalize(correct, isListening);
+            const isCorrect=nSelected===nCorrect;
+            document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+            const input=document.getElementById('listeningInput'); if(input) input.disabled=true;
+            
+            if(isCorrect){ score++; document.getElementById('feedbackMessage').innerHTML='🎉 Correct!'; document.getElementById('feedbackMessage').style.color='#58cc02'; playCorrectSound(); }
+            else { mistakes++; currentHearts=Math.max(0, currentHearts-1); updateHearts(); fetch('/api/update-hearts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hearts:currentHearts})}); document.getElementById('feedbackMessage').innerHTML=`❌ Correct: ${correct}`; document.getElementById('feedbackMessage').style.color='#ff4b4b'; playWrongSound(); if(currentHearts===0){ alert('❤️ No hearts left!'); window.location.href=`/unit/${unitId}`; return; } }
+            
+            if(currentIndex<questions.length-1){ document.getElementById('nextBtn').classList.remove('hidden'); document.getElementById('nextBtn').textContent='Next →'; document.getElementById('nextBtn').onclick=()=>{ currentIndex++; showQuestion(currentIndex); }; }
+            else { document.getElementById('nextBtn').classList.remove('hidden'); document.getElementById('nextBtn').textContent='Finish 🎯'; document.getElementById('nextBtn').onclick=finishExercise; }
+        }
+
+        async function finishExercise(){
+            const res=await fetch('/api/complete-lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({unit_id:parseInt(unitId),lesson_id:parseInt(lessonId),score:score,total:questions.length,mistakes:mistakes})});
+            const data=await res.json();
+            let msg=`🎉 Lesson Complete!\n\n✅ Score: ${score}/${questions.length}\n⭐ +${data.xp_earned} XP\n❤️ Hearts: ${data.hearts}`;
+            if(data.chest_reward) msg+=`\n\n🎁 CHEST: ${data.chest_reward.name}`;
+            alert(msg); window.location.href=`/unit/${unitId}`;
+        }
+
+        function showLeaveModal(){ document.getElementById('leaveModal').classList.add('show'); }
+        function hideLeaveModal(){ document.getElementById('leaveModal').classList.remove('show'); }
+        function forceLeave(){ window.location.href=`/unit/${unitId}`; }
+
+        document.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&canProceed){ e.preventDefault(); document.getElementById('nextBtn').click(); } if(!answered&&e.key>='1'&&e.key<='4'){ e.preventDefault(); const btns=document.querySelectorAll('.option-btn:not(.submit-btn)'); const idx=parseInt(e.key)-1; if(btns[idx]) btns[idx].click(); } });
+        document.addEventListener('click',()=>{ if(audioContext.state==='suspended') audioContext.resume(); },{once:true});
+        loadQuestions();
+    </script>
+</body>
+</html>

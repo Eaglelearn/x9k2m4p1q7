@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>EagleLearn • Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-y: scroll; overflow-x: hidden; }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #f5f7fa;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+        .app-header {
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .subject-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .header-stats { display: flex; gap: 8px; }
+        .streak-badge, .heart-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .heart-badge { color: #ff4b4b; }
+        .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; text-decoration: none; }
+        .stats-bar {
+            padding: 8px 20px;
+            background: white;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .xp-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .home-content {
+            padding: 20px;
+            padding-bottom: 80px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .welcome-section h2 { font-size: 24px; color: #333; margin-bottom: 12px; }
+        .eagle-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .eagle-icon {
+            font-size: 40px;
+            background: #8B4513;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .units-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
+        .unit-card {
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: none;
+            min-height: 120px;
+        }
+        .unit-card.unlocked:hover {
+            border-color: #8B4513;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .unit-card.locked { opacity: 0.5; cursor: not-allowed; }
+        .unit-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .unit-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: #f5e6d3;
+            color: #8B4513;
+        }
+        .unit-icon.completed { background: #8B4513; color: white; }
+        .unit-info h4 { font-size: 18px; font-weight: 700; }
+        .unit-info p { font-size: 14px; color: #888; }
+        .unit-progress { height: 6px; background: #e5e5e5; border-radius: 3px; overflow: hidden; }
+        .unit-progress-bar { height: 100%; background: #8B4513; }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            z-index: 100;
+        }
+        .nav-item {
+            color: #999;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        .nav-item.active { background: #f5e6d3; color: #8B4513; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 { margin-bottom: 20px; }
+        .option-item {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .option-item:hover { background: #f5e6d3; }
+        .option-item.selected { background: #8B4513; color: white; }
+        .close-btn {
+            width: 100%;
+            padding: 14px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        .admin-btn {
+            background: gold;
+            color: black;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+        .signature-bar {
+            text-align: center;
+            padding: 6px;
+            background: #8B4513;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        @media (min-width: 900px) {
+            .app-header, .stats-bar, .home-content, .bottom-nav, .signature-bar { max-width: 1000px; }
+            .units-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        }
+        @media (min-width: 1300px) {
+            .app-header, .stats-bar, .home-content, .bottom-nav, .signature-bar { max-width: 1200px; }
+            .units-list { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="subject-selector" onclick="showSubjectModal()">
+            <span id="currentSubjectIcon">🌍</span>
+            <span id="currentSubject">Language</span>
+            <span>▼</span>
+        </div>
+        <div class="header-stats">
+            <div class="streak-badge"><span>🔥</span><span id="streakCount">0</span></div>
+            <div class="heart-badge"><span>❤️</span><span id="heartCount">5</span></div>
+        </div>
+        <div class="header-right"><a href="/profile" class="icon-btn">👤</a></div>
+    </header>
+    
+    <div class="signature-bar">🦅 Made by Enkhtugs © 2026 - All Rights Reserved</div>
+    
+    <div class="stats-bar">
+        <div class="language-selector" id="langSelectorBtn" onclick="showLanguageModal()">
+            <span id="currentFlag">🇬🇧</span><span id="currentLanguage">English</span><span>▼</span>
+        </div>
+        <div class="language-selector" id="mathLangSelectorBtn" onclick="showMathLanguageModal()" style="display: none;">
+            <span id="mathCurrentFlag">🇬🇧</span><span id="mathCurrentLanguage">English UI</span><span>▼</span>
+        </div>
+        <div class="xp-badge"><span>⭐</span><span id="xpCount">0</span></div>
+    </div>
+
+    <main class="home-content">
+        <div class="welcome-section">
+            <h2>
+    <span id="greetingText">Hello</span>, 
+    <span id="displayUsername">User</span>! 
+    <span id="creatorBadge"></span>
+    <span id="teacherBadge"></span>
+</h2>
+            <div class="eagle-message">
+                <span class="eagle-icon">🦅</span>
+                <p id="welcomeMessage">Ready to soar today?</p>
+            </div>
+        </div>
+        <h3 style="margin-bottom: 16px; color: #555;">Your Learning Path</h3>
+        <div id="unitsContainer" class="units-list"><p>Loading units...</p></div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/home" class="nav-item active">🏠 Home</a>
+        <a href="/profile" class="nav-item">👤 Profile</a>
+    </nav>
+
+    <div id="subjectModal" class="modal" onclick="if(event.target === this) hideSubjectModal()">
+        <div class="modal-content"><h3>Choose Subject</h3><div id="subjectList"></div><button class="close-btn" onclick="hideSubjectModal()">Cancel</button></div>
+    </div>
+    <div id="languageModal" class="modal" onclick="if(event.target === this) hideLanguageModal()">
+        <div class="modal-content"><h3>Choose Language</h3><div id="languageList"></div><button class="close-btn" onclick="hideLanguageModal()">Cancel</button></div>
+    </div>
+    <div id="mathLanguageModal" class="modal" onclick="if(event.target === this) hideMathLanguageModal()">
+        <div class="modal-content"><h3>Choose Math UI Language</h3><div id="mathLanguageList"></div><button class="close-btn" onclick="hideMathLanguageModal()">Cancel</button></div>
+    </div>
+
+    <script>
+        let currentSubject = 'Language', currentLanguage = 'English', mathUILanguage = 'English', isCreator = false;
+        const flagMap = {'English': '🇬🇧', 'Spanish': '🇪🇸', 'French': '🇫🇷', 'Mongolian': '🇲🇳'};
+        const mathFlagMap = {'English': '🇬🇧', 'Mongolian': '🇲🇳'};
+        const subjectIconMap = {'Language': '🌍', 'Math': '🔢'};
+
+        async function loadHome() {
+            try {
+                const userRes = await fetch('/api/user');
+                const user = await userRes.json();
+                if (user.error) { window.location.href = '/'; return; }
+                currentSubject = user.subject || 'Language';
+                currentLanguage = user.learning_language || 'English';
+                mathUILanguage = user.math_ui_language || 'English';
+                isCreator = user.is_creator || false;
+                document.getElementById('displayUsername').textContent = user.username;
+                document.getElementById('greetingText').textContent = user.display_name || 'Hello';
+                document.getElementById('streakCount').textContent = user.streak || 0;
+                document.getElementById('xpCount').textContent = user.total_xp || 0;
+                document.getElementById('heartCount').textContent = user.hearts || 5;
+                document.getElementById('currentSubject').textContent = currentSubject;
+                document.getElementById('currentSubjectIcon').textContent = subjectIconMap[currentSubject] || '🌍';
+                document.getElementById('currentFlag').textContent = flagMap[currentLanguage] || '🇬🇧';
+                document.getElementById('currentLanguage').textContent = currentLanguage;
+             if (isCreator) {
+    document.getElementById('creatorBadge').innerHTML = '<a href="/admin" class="admin-btn">👑 ADMIN</a>';
+}
+
+// ADD THIS FOR TEACHER:
+if (user.role === 'teacher') {
+    document.getElementById('teacherBadge').innerHTML = '<a href="/teacher" class="admin-btn" style="background: #4a90d9;">👨‍🏫 TEACHER</a>';
+}
+                const msg = document.getElementById('welcomeMessage');
+                msg.textContent = currentSubject === 'Math' ? 'Ready to solve some problems? 🔢' : `Ready to learn ${currentLanguage}? 🦅`;
+                const langBtn = document.getElementById('langSelectorBtn'), mathLangBtn = document.getElementById('mathLangSelectorBtn');
+                if (currentSubject === 'Math') {
+                    langBtn.style.display = 'none'; mathLangBtn.style.display = 'flex';
+                    document.getElementById('mathCurrentFlag').textContent = mathFlagMap[mathUILanguage] || '🇬🇧';
+                    document.getElementById('mathCurrentLanguage').textContent = mathUILanguage === 'Mongolian' ? 'Монгол UI' : 'English UI';
+                } else { langBtn.style.display = 'flex'; mathLangBtn.style.display = 'none'; }
+                const unitsRes = await fetch('/api/units'), unitsData = await unitsRes.json();
+                const container = document.getElementById('unitsContainer'); container.innerHTML = '';
+                if (!unitsData.units.length) { container.innerHTML = '<p>No units available.</p>'; return; }
+                unitsData.units.forEach(unit => {
+                    const card = document.createElement('div');
+                    card.className = `unit-card ${unit.unlocked ? 'unlocked' : 'locked'}`;
+                    const progressPercent = (unit.completed / unit.total) * 100;
+                    const icon = unit.completed >= unit.total ? '✅' : '📚';
+                    const iconClass = unit.completed >= unit.total ? 'completed' : '';
+                    const chestIcon = unit.has_chest ? ' 🎁' : '';
+                    card.innerHTML = `<div class="unit-header"><div class="unit-icon ${iconClass}">${icon}</div><div class="unit-info"><h4>${unit.name}${chestIcon}</h4><p>${unit.completed}/${unit.total} lessons</p></div></div><div class="unit-progress"><div class="unit-progress-bar" style="width: ${progressPercent}%"></div></div>`;
+                    if (unit.unlocked) card.onclick = () => window.location.href = `/unit/${unit.id}`;
+                    container.appendChild(card);
+                });
+            } catch (err) { document.getElementById('unitsContainer').innerHTML = '<p>Error loading. Please refresh.</p>'; }
+        }
+
+        async function showSubjectModal() {
+            const modal = document.getElementById('subjectModal'), list = document.getElementById('subjectList');
+            const res = await fetch('/api/subjects'), data = await res.json();
+            list.innerHTML = '';
+            data.subjects.forEach(subject => {
+                const div = document.createElement('div'); div.className = 'option-item';
+                if (subject.id === currentSubject) div.classList.add('selected');
+                div.innerHTML = `<span style="font-size: 24px;">${subject.icon}</span><span style="font-weight: 600;">${subject.name}</span>`;
+                div.onclick = async () => { await fetch('/api/set-subject', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject: subject.id, language: currentLanguage})}); hideSubjectModal(); location.reload(); };
+                list.appendChild(div);
+            });
+            modal.classList.add('show');
+        }
+        async function showLanguageModal() {
+            const modal = document.getElementById('languageModal'), list = document.getElementById('languageList');
+            const res = await fetch('/api/languages'), data = await res.json();
+            list.innerHTML = '';
+            data.languages.forEach(lang => {
+                const div = document.createElement('div'); div.className = 'option-item';
+                if (lang.code === currentLanguage) div.classList.add('selected');
+                div.innerHTML = `<span style="font-size: 24px;">${lang.flag}</span><span style="font-weight: 600;">${lang.name}</span>`;
+                div.onclick = async () => { await fetch('/api/set-subject', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject: 'Language', language: lang.code})}); hideLanguageModal(); location.reload(); };
+                list.appendChild(div);
+            });
+            modal.classList.add('show');
+        }
+        async function showMathLanguageModal() {
+            const modal = document.getElementById('mathLanguageModal'), list = document.getElementById('mathLanguageList');
+            const res = await fetch('/api/math-ui-languages'), data = await res.json();
+            list.innerHTML = '';
+            data.languages.forEach(lang => {
+                const div = document.createElement('div'); div.className = 'option-item';
+                if (lang.code === mathUILanguage) div.classList.add('selected');
+                div.innerHTML = `<span style="font-size: 24px;">${lang.flag}</span><span style="font-weight: 600;">${lang.name}</span>`;
+                div.onclick = async () => { await fetch('/api/set-subject', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject: 'Math', math_ui_language: lang.code})}); hideMathLanguageModal(); location.reload(); };
+                list.appendChild(div);
+            });
+            modal.classList.add('show');
+        }
+        function hideSubjectModal() { document.getElementById('subjectModal').classList.remove('show'); }
+        function hideLanguageModal() { document.getElementById('languageModal').classList.remove('show'); }
+        function hideMathLanguageModal() { document.getElementById('mathLanguageModal').classList.remove('show'); }
+        loadHome();
+    </script>
+</body>
+</html>

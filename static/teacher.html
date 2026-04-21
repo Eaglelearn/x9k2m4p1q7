@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👨‍🏫 Teacher Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Quicksand', sans-serif; background: #1a1a2e; color: white; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #4a90d9; }
+        h2 { color: #4a90d9; margin: 20px 0; }
+        h3 { color: #4a90d9; margin: 15px 0; }
+        .back-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-bottom: 20px; }
+        .add-btn { background: #58cc02; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-bottom: 20px; margin-left: 10px; }
+        .search-box { padding: 10px; border-radius: 10px; border: none; width: 250px; margin-bottom: 20px; margin-left: 10px; }
+        .students-grid { display: grid; gap: 15px; margin-bottom: 30px; }
+        .student-card { background: #16213e; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; cursor: pointer; }
+        .student-card:hover { background: #1e2a4a; }
+        .student-card.selected { border: 2px solid #4a90d9; background: #1e2a4a; }
+        .student-info h3 { color: #4a90d9; }
+        .student-stats { display: flex; gap: 20px; color: #aaa; flex-wrap: wrap; }
+        .btn { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0 5px; }
+        .btn-reset { background: #ffa500; color: white; }
+        .btn-delete { background: #ff4b4b; color: white; }
+        .btn-view { background: #4a90d9; color: white; }
+        .btn-cancel { background: #666; color: white; }
+        .loading { text-align: center; padding: 40px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: #16213e; padding: 30px; border-radius: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; }
+        .modal-content h3 { color: #4a90d9; margin-bottom: 20px; }
+        .modal-content input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #0f3460; color: white; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .progress-panel { background: #16213e; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        .units-container { display: flex; flex-direction: column; gap: 15px; max-height: 500px; overflow-y: auto; }
+        .unit-section { background: #0f3460; border-radius: 12px; padding: 15px; }
+        .unit-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; color: #4a90d9; font-weight: 700; font-size: 18px; cursor: pointer; }
+        .lessons-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-left: 20px; }
+        .lesson-checkbox { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #1a1a2e; border-radius: 8px; }
+        .lesson-checkbox.completed { background: #1e3a1e; }
+        .lesson-checkbox span:first-child { font-size: 12px; }
+        .lesson-checkbox span:last-child { font-size: 11px; color: #aaa; }
+        .lesson-checkbox.completed span:last-child { color: #58cc02; }
+        .collapse-icon { font-size: 20px; transition: transform 0.2s; }
+        .unit-section.collapsed .lessons-grid { display: none; }
+        .unit-section.collapsed .collapse-icon { transform: rotate(-90deg); }
+        .subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .subject-tab { padding: 10px 20px; background: #0f3460; border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600; }
+        .subject-tab.active { background: #4a90d9; }
+        .selected-student-bar { background: #4a90d9; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <button class="back-btn" onclick="window.location.href='/home'">← Back to Home</button>
+            <button class="add-btn" onclick="showAddStudentModal()">➕ Add Student</button>
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search student..." onkeyup="filterStudents()">
+        </div>
+        <h1>👨‍🏫 Teacher Dashboard</h1>
+        <h2>📋 Your Students (Click to view progress)</h2>
+        <div id="studentsContainer" class="students-grid"><div class="loading">Loading students...</div></div>
+        
+        <div id="selectedStudentPanel" style="display: none;">
+            <div class="selected-student-bar">
+                <span>📝 Viewing: <strong id="selectedStudentName"></strong></span>
+                <div>
+                    <button class="btn btn-reset" onclick="resetSelectedPassword()">🔑 Reset PW</button>
+                    <button class="btn btn-delete" onclick="showDeleteConfirm()">🗑️ Remove from List</button>
+                </div>
+            </div>
+            
+            <div class="subject-tabs">
+                <button class="subject-tab active" onclick="switchSubject('Language')">🌍 Language</button>
+                <button class="subject-tab" onclick="switchSubject('Math')">🔢 Math</button>
+            </div>
+            
+            <div class="progress-panel">
+                <h3>📚 <span id="currentSubjectTitle">Language</span> Progress</h3>
+                <div id="progressContainer" class="units-container"><div class="loading">Select a student to view progress...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <h3>➕ Add New Student</h3>
+            <input type="text" id="newUsername" placeholder="Username" required>
+            <input type="password" id="newPassword" placeholder="Password" value="student123">
+            <div class="modal-buttons">
+                <button class="btn btn-view" onclick="addStudent()">Create</button>
+                <button class="btn btn-cancel" onclick="closeAddModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Confirm Remove</h3>
+            <p>Are you sure you want to remove <strong id="deleteStudentName"></strong> from your list?</p>
+            <p style="color: #ffa500; font-size: 14px;">Their account will NOT be deleted.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-delete" onclick="confirmDeleteStudent()">Yes, Remove</button>
+                <button class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedStudent = null, currentProgress = {}, currentViewSubject = 'Language', allLanguageUnits = [], allMathUnits = [];
+        let allStudents = []; // Store all students for filtering
+
+        async function loadStudents() {
+            try {
+                const res = await fetch('/api/teacher/students');
+                const data = await res.json();
+                allStudents = data.students || [];
+                displayStudents(allStudents);
+            } catch (err) {
+                document.getElementById('studentsContainer').innerHTML = '<div class="loading">Error loading students.</div>';
+            }
+        }
+
+        function displayStudents(students) {
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = '';
+            
+            if (!students || students.length === 0) {
+                container.innerHTML = '<div class="loading">No students found.</div>';
+                return;
+            }
+            
+            students.forEach(s => {
+                const card = document.createElement('div');
+                card.className = `student-card ${selectedStudent === s.username ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <div class="student-info">
+                        <h3>${s.username}</h3>
+                        <div class="student-stats">
+                            <span>🔥 ${s.streak}</span>
+                            <span>⭐ ${s.total_xp} XP</span>
+                            <span>❤️ ${s.hearts}/5</span>
+                            <span>📚 ${s.lessons_completed} lessons</span>
+                            <span>🌍 ${s.learning_language}</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-reset" onclick="event.stopPropagation(); resetPassword('${s.username}')">🔑 Reset PW</button>
+                    </div>
+                `;
+                card.onclick = () => selectStudent(s.username);
+                container.appendChild(card);
+            });
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allStudents.filter(s => s.username.toLowerCase().includes(searchTerm));
+            displayStudents(filtered);
+        }
+
+        async function selectStudent(username) {
+            selectedStudent = username;
+            document.getElementById('selectedStudentName').textContent = username;
+            document.getElementById('selectedStudentPanel').style.display = 'block';
+            
+            document.querySelectorAll('.student-card').forEach(card => {
+                card.classList.remove('selected');
+                if (card.querySelector('h3').textContent === username) card.classList.add('selected');
+            });
+            
+            try {
+                const res = await fetch(`/api/admin/user/${username}/full`);
+                const data = await res.json();
+                currentProgress = data.progress || {};
+                
+                const langRes = await fetch('/api/units?subject=Language');
+                const langData = await langRes.json();
+                allLanguageUnits = langData.units || [];
+                
+                const mathRes = await fetch('/api/units?subject=Math');
+                const mathData = await mathRes.json();
+                allMathUnits = mathData.units || [];
+                
+                renderProgress();
+            } catch (err) {
+                document.getElementById('progressContainer').innerHTML = '<div class="loading">Error loading progress.</div>';
+            }
+        }
+
+        function switchSubject(subject) {
+            currentViewSubject = subject;
+            document.querySelectorAll('.subject-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('currentSubjectTitle').textContent = subject;
+            renderProgress();
+        }
+
+        function renderProgress() {
+            const container = document.getElementById('progressContainer');
+            container.innerHTML = '';
+            const units = currentViewSubject === 'Language' ? allLanguageUnits : allMathUnits;
+            
+            if (!units || units.length === 0) {
+                container.innerHTML = '<div class="loading">No units available.</div>';
+                return;
+            }
+            
+            units.forEach(unit => {
+                const unitDiv = document.createElement('div');
+                unitDiv.className = 'unit-section';
+                let completedLessons = 0;
+                
+                for (let lessonId = 1; lessonId <= unit.total; lessonId++) {
+                    const key = `${currentViewSubject}:${unit.id}:${lessonId}`;
+                    if (currentProgress[key]?.completed) completedLessons++;
+                }
+                
+                unitDiv.innerHTML = `
+                    <div class="unit-header" onclick="toggleUnit(this)">
+                        <span class="collapse-icon">▼</span>
+                        <span>Unit ${unit.id}: ${unit.name}</span>
+                        <span style="margin-left: auto; font-size: 14px; color: #aaa;">${completedLessons}/${unit.total}</span>
+                    </div>
+                    <div class="lessons-grid" id="unit-${currentViewSubject}-${unit.id}-lessons"></div>
+                `;
+                container.appendChild(unitDiv);
+                
+                const lessonsGrid = document.getElementById(`unit-${currentViewSubject}-${unit.id}-lessons`);
+                for (let lessonId = 1; lessonId <= unit.total; lessonId++) {
+                    const key = `${currentViewSubject}:${unit.id}:${lessonId}`;
+                    const isCompleted = currentProgress[key]?.completed || false;
+                    const score = currentProgress[key]?.score || 0;
+                    const lessonDiv = document.createElement('div');
+                    lessonDiv.className = `lesson-checkbox ${isCompleted ? 'completed' : ''}`;
+                    lessonDiv.innerHTML = `
+                        <span>📝 Lesson ${lessonId}</span>
+                        ${isCompleted ? `<span>✅ ${score}/5</span>` : '<span>❌ Not started</span>'}
+                    `;
+                    lessonsGrid.appendChild(lessonDiv);
+                }
+            });
+        }
+
+        function toggleUnit(header) {
+            header.closest('.unit-section').classList.toggle('collapsed');
+        }
+
+        async function addStudent() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, teacher_code: '' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Student ${username} created! Password: ${password}`);
+                    closeAddModal();
+                    loadStudents();
+                    document.getElementById('newUsername').value = '';
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('❌ Connection error');
+            }
+        }
+
+        async function resetPassword(username) {
+            const newPassword = prompt(`Enter new password for ${username}:`, 'eagle123');
+            if (!newPassword) return;
+            
+            try {
+                const res = await fetch(`/api/teacher/student/${username}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_password: newPassword })
+                });
+                const data = await res.json();
+                alert(data.message);
+            } catch (err) {
+                alert('❌ Error resetting password');
+            }
+        }
+
+        async function resetSelectedPassword() {
+            if (selectedStudent) {
+                await resetPassword(selectedStudent);
+            }
+        }
+
+        function showDeleteConfirm() {
+            if (selectedStudent) {
+                document.getElementById('deleteStudentName').textContent = selectedStudent;
+                document.getElementById('deleteConfirmModal').classList.add('show');
+            }
+        }
+
+        async function confirmDeleteStudent() {
+            if (!selectedStudent) return;
+            
+            closeDeleteModal();
+            
+            // Remove from the displayed list only
+            const filtered = allStudents.filter(s => s.username !== selectedStudent);
+            allStudents = filtered;
+            displayStudents(allStudents);
+            
+            alert(`📋 Student ${selectedStudent} removed from your list. Account still exists.`);
+            
+            document.getElementById('selectedStudentPanel').style.display = 'none';
+            selectedStudent = null;
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteConfirmModal').classList.remove('show');
+        }
+
+        function showAddStudentModal() {
+            document.getElementById('addStudentModal').classList.add('show');
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = 'student123';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addStudentModal').classList.remove('show');
+        }
+
+        document.getElementById('addStudentModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) closeAddModal();
+        });
+        
+        document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) closeDeleteModal();
+        });
+
+        loadStudents();
+    </script>
+</body>
+</html>

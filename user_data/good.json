@@ -1,0 +1,108 @@
+{
+  "username": "Good",
+  "password": "e186022d0931afe9fe0690857e32f85e50165e7fbe0966d49609ef1981f920c6",
+  "learning_language": "English",
+  "learning_subject": "Language",
+  "math_ui_language": "English",
+  "role": "student",
+  "streak": 2,
+  "last_active": "2026-04-19",
+  "total_xp": 735,
+  "hearts": 4,
+  "last_heart_refill": "2026-04-19 21:41:08",
+  "boost_multiplier": 1,
+  "boost_expires": null,
+  "chests_earned": 4,
+  "created_at": "2026-04-18 22:42:07",
+  "progress": {
+    "Language:1:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:1:2": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:1:3": {
+      "completed": true,
+      "score": 3
+    },
+    "Language:1:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:1:5": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:2:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:2:2": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:2:3": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:2:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:2:5": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:3:1": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:2": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:3:3": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:3:5": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:1": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:4:2": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:4:3": {
+      "completed": true,
+      "score": 4
+    },
+    "Language:4:4": {
+      "completed": true,
+      "score": 5
+    },
+    "Language:4:5": {
+      "completed": true,
+      "score": 4
+    }
+  },
+  "chests_claimed": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "is_creator": false,
+  "vocabulary_learned": [],
+  "admin_locked_hearts": true
+}
