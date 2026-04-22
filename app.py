@@ -526,14 +526,19 @@ def set_subject():
 
 @app.route('/api/unit/<int:unit_id>/lessons', methods=['GET'])
 def lessons(unit_id):
-    user = load_user_data(session['username'])
+    username = session['username']  # ← ADD THIS (missing!)
+    user = load_user_data(username)
     sub = user['learning_subject']
     units = ENGLISH_UNITS if sub == 'Language' else MATH_UNITS
     unit = next((u for u in units if u['id'] == unit_id), {"name": f"Unit {unit_id}", "lessons": 5, "chest_at": 3})
-    chest_claimed = unit_id in user.get('chests_claimed', [])
+    
+    # Load progress from Supabase
+    user_progress = load_progress(username, sub)  # ← MOVE THIS OUTSIDE the loop!
+    chest_claimed = unit_id in load_chests(username)  # ← Use load_chests() instead of user.get('chests_claimed')
+    
     lessons_list = []
     for i in range(1, unit['lessons']+1):
-        comp = user['progress'].get(f"{sub}:{unit_id}:{i}", {}).get('completed', False)
+        comp = user_progress.get(f"{sub}:{unit_id}:{i}", {}).get('completed', False)
         unlocked = i == 1 or is_creator(session['username']) or (lessons_list[-1]['completed'] if lessons_list else True)
         has_chest = (i == unit.get('chest_at', 3)) and not chest_claimed
         lessons_list.append({"id": i, "title": f"Lesson {i}", "completed": comp, "unlocked": unlocked, "has_chest": has_chest})
@@ -541,14 +546,15 @@ def lessons(unit_id):
 
 @app.route('/api/lesson/<int:unit_id>/<int:lesson_id>', methods=['GET'])
 def get_lesson(unit_id, lesson_id):
-    user = load_user_data(session['username'])
+    username = session['username']  # ← ADD THIS
+    user = load_user_data(username)
     user = check_heart_refill(user)
-    save_user_data(session['username'], user)
-    if user['hearts'] <= 0 and not is_creator(session['username']): return jsonify({"error": "No hearts left!"}), 403
+    save_user_data(username, user)
+    if user['hearts'] <= 0 and not is_creator(session['username']): 
+        return jsonify({"error": "No hearts left!"}), 403
     sub = user['learning_subject']
     questions = [generate_question(unit_id) if sub == 'Language' else generate_math_question(unit_id) for _ in range(5)]
     return jsonify({"questions": questions, "hearts": user['hearts'] if not is_creator(session['username']) else 999})
-
 @app.route('/api/update-hearts', methods=['POST'])
 def update_hearts():
     d = request.json
