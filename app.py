@@ -1,3 +1,4 @@
+from datetime import datetime, date
 import hashlib
 import os
 import random
@@ -374,7 +375,33 @@ def load_progress(u,s=None):
             p[f"{i['subject']}:{i['unit_id']}:{i['lesson_id']}"]={"completed":i['completed'],"score":i['score']}
         return p
     except: return {}
+def load_progress(username, subject):
+    try:
+        res = supabase.table('progress').select('*').eq('username', username).eq('subject', subject).execute()
+        # Convert list to dictionary for the frontend map to read easily
+        return {f"{p['subject']}:{p['unit_id']}:{p['lesson_id']}": p for p in res.data}
+    except Exception as e:
+        print(f"❌ Progress Load Error: {e}")
+        return {}
 
+def save_progress(username, subject, unit_id, lesson_id, completed, score):
+    try:
+        # Create a unique ID for this specific lesson (e.g., "CREATOR:Math:1:1")
+        prog_id = f"{username}:{subject}:{unit_id}:{lesson_id}"
+        data = {
+            "id": prog_id,
+            "username": username,
+            "subject": subject,
+            "unit_id": unit_id,
+            "lesson_id": lesson_id,
+            "completed": completed,
+            "score": score,
+            "updated_at": datetime.now().isoformat()
+        }
+        # upsert = Update if exists, Insert if it doesn't
+        supabase.table('progress').upsert(data).execute()
+    except Exception as e:
+        print(f"❌ Progress Save Error: {e}")
 def save_progress(u,s,uid,lid,comp=True,score=5):
     try:
         print(f"💾 ATTEMPTING TO SAVE: {u}, {s}, {uid}, {lid}")
@@ -570,40 +597,87 @@ def get_lesson(unit_id, lesson_id):
 @app.route('/api/update-hearts', methods=['POST'])
 def update_hearts():
     d = request.json
-    user = load_user_data(session['username'])
-    if not is_creator(session['username']): user['hearts'] = max(0, d['hearts'])
-    save_user_data(session['username'], user)
-    return jsonify({"success": True})
+    username = session.get('username')
+    
+    if not username:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
 
+    user = load_user_data(username)
+    
+    # Only update if they aren't the creator (Creator has infinite hearts usually)
+    if not is_creator(username):
+        # Limit hearts to a max of 5 so people can't cheat
+        new_hearts = max(0, min(5, d.get('hearts', 5)))
+        user['hearts'] = new_hearts
+        
+    save_user_data(username, user)
+    return jsonify({"success": True, "hearts": user['hearts']})
 @app.route('/api/complete-lesson', methods=['POST'])
 def complete_lesson():
-    d = request.json
-    username = session['username']
-    user = load_user_data(username)
-    sub = user['learning_subject']
+    d = request.get_json(force=True)
     
-    print(f"🔵 CALLING save_progress for {username}, lesson {d['lesson_id']}")  # ← INSIDE route
-    save_progress(username, sub, d['unit_id'], d['lesson_id'], True, d['score'])
-    print(f"🟢 save_progress COMPLETE")  # ← INSIDE route
+    # 1. AUTH CHECK: Fallback to JSON if session is dead
+    username = session.get('username') or d.get('username')
     
-    # ... rest of code
-    chest_reward = None
-    if d['lesson_id'] == 3 and d['unit_id'] not in load_chests(username):  # Check Supabase for chests
-        reward = random.choice([{"type": "hearts", "value": 1}, {"type": "xp", "value": 100}])
-        if reward['type'] == 'hearts': 
-            user['hearts'] = min(5, user['hearts'] + reward['value'])
-        else: 
-            user['total_xp'] += reward['value']
+    if not username:
+        print("❌ ERROR: No username found")
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    try:
+        # 2. LOAD DATA
+        user = load_user_data(username)
+        if not user:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        subject = user.get('learning_subject', 'Language')
+        unit_id = d.get('unit_id')
+        lesson_id = d.get('lesson_id')
+        score = d.get('score', 0)
+
+        print(f"🔵 SAVING: {username} | Unit: {unit_id} | Lesson: {lesson_id}")
+
+        # 3. SAVE PROGRESS TABLE
+        save_progress(username, subject, unit_id, lesson_id, True, score)
+
+        # 4. UPDATE STATS
+        xp_gain = score * 5
+        user['total_xp'] = user.get('total_xp', 0) + xp_gain
         
-        # Save chest to Supabase
-        save_chest(username, d['unit_id'])
-        user['chests_earned'] = user.get('chests_earned', 0) + 1
-        chest_reward = {"name": f"+{reward['value']} {reward['type']}"}
-    
-    # Save user data (XP, hearts, etc.)
-    save_user_data(username, user)
-    
-    return jsonify({"success": True, "xp_earned": d['score'] * 5, "hearts": user['hearts'], "chest_reward": chest_reward})
+        # 5. CHEST LOGIC (Lesson 3)
+        chest_reward = None
+        # Load currently claimed chests
+        claimed_chests = load_chests(username) 
+        
+        # Check if it's lesson 3 and not already claimed
+        if int(lesson_id) == 3 and str(unit_id) not in [str(c) for c in claimed_chests]:
+            reward = random.choice([
+                {"type": "hearts", "value": 1}, 
+                {"type": "xp", "value": 100}
+            ])
+            
+            if reward['type'] == 'hearts':
+                user['hearts'] = min(5, user.get('hearts', 5) + reward['value'])
+            else:
+                user['total_xp'] += reward['value']
+            
+            # Save the new chest to Supabase
+            save_chest(username, unit_id)
+            chest_reward = {"name": f"+{reward['value']} {reward['type']}"}
+
+        # 6. PUSH UPDATED USER OBJECT
+        save_user_data(username, user)
+        
+        print(f"🟢 SUCCESS: Saved for {username}")
+        return jsonify({
+            "success": True, 
+            "xp_earned": xp_gain, 
+            "hearts": user.get('hearts', 5), 
+            "chest_reward": chest_reward
+        })
+
+    except Exception as e:
+        print(f"❌ KRAKEN ERROR: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 @app.route('/api/subjects', methods=['GET'])
 def subjects(): return jsonify({"subjects": [{"id": "Language", "name": "Language", "icon": "🌍"}, {"id": "Math", "name": "Математик", "icon": "🔢"}]})
 
