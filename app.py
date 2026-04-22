@@ -376,9 +376,21 @@ def load_progress(u,s=None):
     except: return {}
 
 def save_progress(u,s,uid,lid,comp=True,score=5):
-    try: supabase.table('progress').upsert({'username':u,'subject':s,'unit_id':uid,'lesson_id':lid,'completed':comp,'score':score}).execute()
-    except: pass
-
+    try:
+        print(f"💾 ATTEMPTING TO SAVE: {u}, {s}, {uid}, {lid}")
+        result = supabase.table('progress').upsert({
+            'username': u,
+            'subject': s,
+            'unit_id': uid,
+            'lesson_id': lid,
+            'completed': comp,
+            'score': score
+        }).execute()
+        print(f"✅ SAVE SUCCESS: {result}")
+        return True
+    except Exception as e:
+        print(f"❌ SAVE FAILED: {e}")
+        return False
 # ===== ROUTES =====
 @app.route('/')
 def index(): return send_from_directory('static', 'index.html' if 'username' not in session else 'home.html')
@@ -570,12 +582,11 @@ def complete_lesson():
     user = load_user_data(username)
     sub = user['learning_subject']
     
-    # Update XP
-    user['total_xp'] = user.get('total_xp', 0) + (d['score'] * 5)
-    
-    # Save progress to Supabase (instead of user['progress'])
+    print(f"🔵 CALLING save_progress for {username}, lesson {d['lesson_id']}")  # ← INSIDE route
     save_progress(username, sub, d['unit_id'], d['lesson_id'], True, d['score'])
+    print(f"🟢 save_progress COMPLETE")  # ← INSIDE route
     
+    # ... rest of code
     chest_reward = None
     if d['lesson_id'] == 3 and d['unit_id'] not in load_chests(username):  # Check Supabase for chests
         reward = random.choice([{"type": "hearts", "value": 1}, {"type": "xp", "value": 100}])
