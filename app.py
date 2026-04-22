@@ -365,6 +365,19 @@ def load_chests(u):
 def save_chest(u,uid):
     try: supabase.table('chests_claimed').insert({'username':u,'unit_id':uid}).execute()
     except: pass
+def load_progress(u,s=None):
+    try:
+        q=supabase.table('progress').select('*').eq('username',u)
+        if s: q=q.eq('subject',s)
+        p={}
+        for i in q.execute().data:
+            p[f"{i['subject']}:{i['unit_id']}:{i['lesson_id']}"]={"completed":i['completed'],"score":i['score']}
+        return p
+    except: return {}
+
+def save_progress(u,s,uid,lid,comp=True,score=5):
+    try: supabase.table('progress').upsert({'username':u,'subject':s,'unit_id':uid,'lesson_id':lid,'completed':comp,'score':score}).execute()
+    except: pass
 
 # ===== ROUTES =====
 @app.route('/')
