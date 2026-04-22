@@ -357,72 +357,6 @@ def check_heart_refill(user_data, force_no_refill=False):
         user_data["last_heart_refill"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
     return user_data
-    """Only auto-refill if force_no_refill is False AND admin hasn't locked hearts"""
-    hearts = user_data.get("hearts", 5)
-    
-    # NEVER auto-refill if force_no_refill is True (used by admin)
-    if force_no_refill:
-        return user_data
-    
-    # NEVER auto-refill if admin locked the hearts
-    if user_data.get('admin_locked_hearts', False):
-        return user_data
-    
-    # If hearts are already 5 or more, just reset timer
-    if hearts >= 5:
-        user_data["hearts"] = 5
-        user_data["last_heart_refill"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        return user_data
-    
-    # Only refill if user has been inactive for 3+ hours
-    last_refill = user_data.get("last_heart_refill")
-    if last_refill:
-        try:
-            last_dt = datetime.strptime(last_refill, '%Y-%m-%d %H:%M:%S')
-            minutes_passed = (datetime.now() - last_dt).total_seconds() / 60
-            hearts_to_add = int(minutes_passed / 180)
-            
-            if hearts_to_add > 0:
-                new_hearts = min(5, hearts + hearts_to_add)
-                if new_hearts > hearts:
-                    user_data["hearts"] = new_hearts
-                    user_data["last_heart_refill"] = (datetime.now() - timedelta(minutes=minutes_passed % 180)).strftime('%Y-%m-%d %H:%M:%S')
-        except:
-            pass
-    
-    save_user_data(username, user_data)
-    return jsonify({"success": True})
-def generate_math_question(unit_id):
-    if unit_id <= 15: a, b, op = random.randint(1, 10), random.randint(1, 10), random.choice(['+', '-'])
-    elif unit_id <= 35: a, b, op = random.randint(10, 50), random.randint(5, 25), '×'
-    else: a, b, op = random.randint(20, 100), random.randint(5, 20), '÷'
-    if op == '+': ans, q = a + b, f"{a} + {b} = ?"
-    elif op == '-':
-        if a < b: a, b = b, a
-        ans, q = a - b, f"{a} - {b} = ?"
-    elif op == '×': ans, q = a * b, f"{a} × {b} = ?"
-    else: ans, q = round(a / b, 1), f"{a} ÷ {b} = ?"
-    wrongs = []
-    for _ in range(3):
-        w = round(ans + random.uniform(-ans*0.3, ans*0.3), 1) if isinstance(ans, float) else ans + random.randint(-10, 10)
-        if w != ans and w not in wrongs: wrongs.append(w)
-    while len(wrongs) < 3: wrongs.append(ans + len(wrongs) + 1)
-    opts = [str(ans)] + [str(w) for w in wrongs]
-    random.shuffle(opts)
-    return {"q": q, "opts": opts, "ans": str(ans)}
-def load_progress(u,s=None):
-    try:
-        q=supabase.table('progress').select('*').eq('username',u)
-        if s: q=q.eq('subject',s)
-        p={}
-        for i in q.execute().data:
-            p[f"{i['subject']}:{i['unit_id']}:{i['lesson_id']}"]={"completed":i['completed'],"score":i['score']}
-        return p
-    except: return {}
-
-def save_progress(u,s,uid,lid,comp=True,score=5):
-    try: supabase.table('progress').upsert({'username':u,'subject':s,'unit_id':uid,'lesson_id':lid,'completed':comp,'score':score}).execute()
-    except: pass
 
 def load_chests(u):
     try: return [i['unit_id'] for i in supabase.table('chests_claimed').select('unit_id').eq('username',u).execute().data]
@@ -736,7 +670,7 @@ def admin_get_user(username):
         "learning_language": user_data.get("learning_language", "English"), 
         "learning_subject": user_data.get("learning_subject", "Language")
     })
-
+    
 @app.route('/api/admin/user/<username>/delete', methods=['POST'])
 def admin_delete_user(username):
     if 'username' not in session: return jsonify({"error": "Not logged in"}), 401
