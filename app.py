@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get Supabase credentials (from .env OR hardcoded fallback)
-SUPABASE_URL = os.environ.get('https://nhcufwzsmszlsyjdcbha.supabase.co')
-SUPABASE_KEY = os.environ.get('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oY3Vmd3pzbXN6bHN5amRjYmhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NzU0OTAsImV4cCI6MjA5MjM1MTQ5MH0.nF7lN6GDbc4q24bSdwHgLHlLfXgUn31YCm8OM5z64iw')
+SUPABASE_URL = ('https://nhcufwzsmszlsyjdcbha.supabase.co')
+SUPABASE_KEY = ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oY3Vmd3pzbXN6bHN5amRjYmhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3NzU0OTAsImV4cCI6MjA5MjM1MTQ5MH0.nF7lN6GDbc4q24bSdwHgLHlLfXgUn31YCm8OM5z64iw')
 
 # FALLBACK - use hardcoded values if .env didn't work
 if not SUPABASE_URL:
